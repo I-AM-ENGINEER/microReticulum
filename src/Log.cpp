@@ -57,7 +57,8 @@ const char* RNS::getTimeString() {
 		millis -= 1000;
 		tv.tv_sec++;
 	}
-	struct tm* tm = localtime(&tv.tv_sec);
+	time_t sec = (time_t)tv.tv_sec;
+	struct tm* tm = localtime(&sec);
 	size_t len = strftime(_datetime, sizeof(_datetime), "%Y-%m-%d %H:%M:%S", tm);
 	snprintf(_datetime+len, sizeof(_datetime)-len, ".%03d", millis);
 	return _datetime;

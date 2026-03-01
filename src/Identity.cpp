@@ -302,7 +302,9 @@ Recall last heard app_data for a destination hash.
 				pass
 */
 
-		for (auto& [destination_hash, identity_entry] : storage_known_destinations) {
+		for (auto& kvp : storage_known_destinations) {
+			const auto& destination_hash = kvp.first;
+			auto& identity_entry = kvp.second;
 			if (_known_destinations.find(destination_hash) == _known_destinations.end()) {
 				//_known_destinations[destination_hash] = storage_known_destinations[destination_hash];
 				//_known_destinations[destination_hash] = identity_entry;
@@ -374,14 +376,18 @@ Recall last heard app_data for a destination hash.
 			// objects — prevents OOM on heap-constrained devices when the table is full.
 			std::vector<std::pair<double, Bytes>> sorted_keys;
 			sorted_keys.reserve(_known_destinations.size());
-			for (const auto& [key, entry] : _known_destinations) {
+			for (const auto& kv : _known_destinations) {
+				const Bytes& key = kv.first;
+				const auto& entry = kv.second;
 				sorted_keys.emplace_back(entry._timestamp, key);
 			}
 			// Sort ascending by timestamp (oldest first)
 			std::sort(sorted_keys.begin(), sorted_keys.end());
 
 			uint16_t count = 0;
-			for (const auto& [timestamp, destination_hash] : sorted_keys) {
+			for (const auto& item : sorted_keys) {
+				const double& timestamp = item.first;
+				const Bytes& destination_hash = item.second;
 				TRACEF("Identity::cull_known_destinations: Removing destination %s from known destinations", destination_hash.toHex().c_str());
 				if (_known_destinations.erase(destination_hash) < 1) {
 					WARNINGF("Failed to remove destination %s from known destinations", destination_hash.toHex().c_str());

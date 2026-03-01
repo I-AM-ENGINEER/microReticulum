@@ -343,7 +343,9 @@ using namespace RNS::Utilities;
 			// Process announces needing retransmission
 			if (OS::time() > (_announces_last_checked + _announces_check_interval)) {
 				//p for destination_hash in Transport.announce_table:
-				for (auto& [destination_hash, announce_entry] : _announce_table) {
+				for (auto& kvp : _announce_table) {
+					const auto& destination_hash = kvp.first;
+					auto& announce_entry = kvp.second;
 				//for (auto& pair : _announce_table) {
 				//	const auto& destination_hash = pair.first;
 				//	auto& announce_entry = pair.second;
@@ -463,7 +465,9 @@ using namespace RNS::Utilities;
 				try {
 					std::vector<Bytes> stale_reverse_entries;
 					stale_reverse_entries.reserve(_reverse_table.size());
-					for (const auto& [packet_hash, reverse_entry] : _reverse_table) {
+					for (const auto& kvp : _reverse_table) {
+						const auto& packet_hash = kvp.first;
+						const auto& reverse_entry = kvp.second;
 						if (OS::time() > (reverse_entry._timestamp + REVERSE_TIMEOUT)) {
 							stale_reverse_entries.push_back(packet_hash);
 						}
@@ -481,7 +485,9 @@ using namespace RNS::Utilities;
 				try {
 					std::vector<Bytes> stale_links;
 					stale_links.reserve(_link_table.size());
-					for (const auto& [link_id, link_entry] : _link_table) {
+					for (const auto& kvp : _link_table) {
+						const auto& link_id = kvp.first;
+						const auto& link_entry = kvp.second;
 						if (link_entry._validated) {
 							if (OS::time() > (link_entry._timestamp + LINK_TIMEOUT)) {
 								stale_links.push_back(link_id);
@@ -564,7 +570,9 @@ using namespace RNS::Utilities;
 				try {
 					std::vector<Bytes> stale_paths;
 					stale_paths.reserve(_destination_table.size());
-					for (const auto& [destination_hash, destination_entry] : _destination_table) {
+					for (const auto& kvp : _destination_table) {
+						const auto& destination_hash = kvp.first;
+						const auto& destination_entry = kvp.second;
 						const Interface& attached_interface = destination_entry.receiving_interface();
 						double destination_expiry;
 						if (attached_interface && attached_interface.mode() == Type::Interface::MODE_ACCESS_POINT) {
@@ -599,7 +607,9 @@ using namespace RNS::Utilities;
 				try {
 					std::vector<Bytes> stale_discovery_path_requests;
 					stale_discovery_path_requests.reserve(_discovery_path_requests.size());
-					for (const auto& [destination_hash, path_entry] : _discovery_path_requests) {
+					for (const auto& kvp : _discovery_path_requests) {
+						const auto& destination_hash = kvp.first;
+						const auto& path_entry = kvp.second;
 						if (OS::time() > path_entry._timeout) {
 							stale_discovery_path_requests.push_back(destination_hash);
 							DEBUGF("Waiting path request for %s timed out and was removed", destination_hash.toString().c_str());
@@ -619,14 +629,18 @@ using namespace RNS::Utilities;
 					count = 0;
 					std::vector<Bytes> stale_tunnels;
 					stale_tunnels.reserve(_tunnels.size());
-					for (const auto& [tunnel_id, tunnel_entry] : _tunnels) {
+					for (const auto& kvp : _tunnels) {
+						const auto& tunnel_id = kvp.first;
+						const auto& tunnel_entry = kvp.second;
 						if (OS::time() > tunnel_entry._expires) {
 							stale_tunnels.push_back(tunnel_id);
 							TRACEF("Tunnel %s timed out and was removed", tunnel_id.toHex().c_str());
 						}
 						else {
 							std::vector<Bytes> stale_tunnel_paths;
-							for (const auto& [destination_hash, destination_entry] : tunnel_entry._serialised_paths) {
+							for (const auto& kvp : tunnel_entry._serialised_paths) {
+								const auto& destination_hash = kvp.first;
+								const auto& destination_entry = kvp.second;
 								if (OS::time() > (destination_entry._timestamp + DESTINATION_TIMEOUT)) {
 									stale_tunnel_paths.push_back(destination_hash);
 									TRACEF("Tunnel path to %s timed out and was removed", destination_hash.toHex().c_str());
@@ -862,7 +876,9 @@ using namespace RNS::Utilities;
 #elif defined(INTERFACES_LIST)
 		for (Interface& interface : _interfaces) {
 #elif defined(INTERFACES_MAP)
-		for (auto& [hash, interface] : _interfaces) {
+		for (auto& kvp : _interfaces) {
+			const auto& hash = kvp.first;
+			auto& interface = kvp.second;
 #endif
 			TRACEF("Transport::outbound: Checking interface %s", interface.toString().c_str());
 			if (interface.OUT()) {
@@ -1438,7 +1454,9 @@ using namespace RNS::Utilities;
 #elif defined(INTERFACES_LIST)
 					for (Interface& interface : _interfaces) {
 #elif defined(INTERFACES_MAP)
-					for (auto& [hash, interface] : _interfaces) {
+					for (auto& kvp : _interfaces) {
+						const auto& hash = kvp.first;
+						auto& interface = kvp.second;
 #endif
 						if (interface != packet.receiving_interface()) {
 							TRACEF("Transport::inbound: Broadcasting packet on %s", interface.toString().c_str());
@@ -2578,7 +2596,9 @@ using namespace RNS::Utilities;
 #if defined(DESTINATIONS_SET)
 	for (const Destination& destination : _destinations) {
 #elif defined(DESTINATIONS_MAP)
-	for (auto& [hash, destination] : _destinations) {
+	for (auto& kvp : _destinations) {
+		const auto& hash = kvp.first;
+		auto& destination = kvp.second;
 #endif
 		TRACEF("Transport::register_destination: Listed destination %s", destination.toString().c_str());
 	}
@@ -3283,7 +3303,9 @@ will announce it.
 #elif defined(INTERFACES_LIST)
 		for (Interface& interface : _interfaces) {
 #elif defined(INTERFACES_MAP)
-		for (auto& [hash, interface] : _interfaces) {
+		for (auto& kvp : _interfaces) {
+			const auto& hash = kvp.first;
+			auto& interface = kvp.second;
 #endif
 			if (interface != attached_interface) {
 				request_path(destination_hash, interface, request_tag);
@@ -3313,7 +3335,9 @@ will announce it.
 #elif defined(INTERFACES_LIST)
 			for (Interface& interface : _interfaces) {
 #elif defined(INTERFACES_MAP)
-			for (auto& [hash, interface] : _interfaces) {
+			for (auto& kvp : _interfaces) {
+				const auto& hash = kvp.first;
+				auto& interface = kvp.second;
 #endif
 				// CBA EXPERIMENTAL forwarding path requests even on requestor interface in order to support
 				//  path-finding over LoRa mesh
@@ -3576,7 +3600,9 @@ TRACEF("Transport::start: buffer size %d bytes", Persistence::_buffer.size());
 
 					TRACEF("Transport::start: successfully deserialized path table with %d entries", _destination_table.size());
 					std::vector<Bytes> invalid_paths;
-					for (auto& [destination_hash, destination_entry] : _destination_table) {
+					for (auto& kvp : _destination_table) {
+						const auto& destination_hash = kvp.first;
+						auto& destination_entry = kvp.second;
 #ifndef NDEBUG
 						TRACEF("Transport::start: entry: %s = %s", destination_hash.toHex().c_str(), destination_entry.debugString().c_str());
 #endif
@@ -3934,7 +3960,9 @@ TRACEF("Transport::write_path_table: buffer size %zu bytes", Persistence::_buffe
     for (auto& file : files) {
 		TRACEF("Transport::clean_caches: Checking for use of cached packet %s", file.c_str());
 		bool found = false;
-		for (auto& [destination_hash, destination_entry] : _destination_table) {
+		for (auto& kvp : _destination_table) {
+			const auto& destination_hash = kvp.first;
+			auto& destination_entry = kvp.second;
 			if (file.compare(destination_entry._announce_packet.toHex()) == 0) {
 				found = true;
 				break;
@@ -3988,11 +4016,15 @@ TRACEF("Transport::write_path_table: buffer size %zu bytes", Persistence::_buffe
 	// _active_links
 	// _tunnels
 	uint32_t destination_path_responses = 0;
-	for (auto& [destination_hash, destination] : _destinations) {
+	for (auto& kvp : _destinations) {
+		const auto& destination_hash = kvp.first;
+		auto& destination = kvp.second;
 		destination_path_responses += destination.path_responses().size();
 	}
 	uint32_t interface_announces = 0;
-	for (auto& [interface_hash, interface] : _interfaces) {
+	for (auto& kvp : _interfaces) {
+		const auto& interface_hash = kvp.first;
+		auto& interface = kvp.second;
 		interface_announces += interface.announce_queue().size();
 	}
 	VERBOSEF("phl: %u rcp: %u lt: %u pl: %u al: %u tun: %u", _packet_hashlist.size(), _receipts.size(), _link_table.size(), _pending_links.size(), _active_links.size(), _tunnels.size());
@@ -4039,14 +4071,18 @@ TRACEF("Transport::write_path_table: buffer size %zu bytes", Persistence::_buffe
 			// devices when the table hits max capacity.
 			std::vector<std::pair<double, Bytes>> sorted_keys;
 			sorted_keys.reserve(_destination_table.size());
-			for (const auto& [key, entry] : _destination_table) {
+			for (const auto& kv : _destination_table) {
+				const Bytes& key = kv.first;
+				const auto& entry = kv.second;
 				sorted_keys.emplace_back(entry._timestamp, key);
 			}
 			// Sort ascending by timestamp so oldest entries are removed first
 			std::sort(sorted_keys.begin(), sorted_keys.end());
 
 			uint16_t count = 0;
-			for (const auto& [timestamp, destination_hash] : sorted_keys) {
+			for (const auto& item : sorted_keys) {
+				const double& timestamp = item.first;
+				const Bytes& destination_hash = item.second;
 				TRACEF("Transport::cull_path_table: Removing destination %s from path table", destination_hash.toHex().c_str());
 #if defined(RNS_USE_FS) && defined(RNS_PERSIST_PATHS)
 				auto it = _destination_table.find(destination_hash);
@@ -4098,14 +4134,18 @@ TRACEF("Transport::write_path_table: buffer size %zu bytes", Persistence::_buffe
 			// devices when the table hits max capacity.
 			std::vector<std::pair<double, Bytes>> sorted_keys;
 			sorted_keys.reserve(_announce_table.size());
-			for (const auto& [key, entry] : _announce_table) {
+			for (const auto& kv : _announce_table) {
+				const Bytes& key = kv.first;
+				const auto& entry = kv.second;
 				sorted_keys.emplace_back(entry._timestamp, key);
 			}
 			// Sort ascending by timestamp so oldest entries are removed first
 			std::sort(sorted_keys.begin(), sorted_keys.end());
 
 			uint16_t count = 0;
-			for (const auto& [timestamp, destination_hash] : sorted_keys) {
+			for (const auto& item : sorted_keys) {
+				const double& timestamp = item.first;
+				const Bytes& destination_hash = item.second;
 				TRACEF("Transport::cull_announce_table: Removing destination %s from path table", destination_hash.toHex().c_str());
 				if (_announce_table.erase(destination_hash) < 1) {
 					WARNINGF("Failed to remove destination %s from path table", destination_hash.toHex().c_str());

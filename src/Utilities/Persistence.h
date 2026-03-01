@@ -551,7 +551,9 @@ namespace RNS { namespace Persistence {
 
 		uint32_t crc = 0;
 		crc = Utilities::Crc::crc32(crc, '{');
-		for (const auto& [key, value] : map) {
+		for (const auto& kvp : map) {
+			const auto& key = kvp.first;
+			const auto& value = kvp.second;
 			crc = Utilities::Crc::crc32(crc, '"');
 			std::string hex = key.toHex();
 			crc = Utilities::Crc::crc32(crc, hex.c_str());
@@ -593,7 +595,9 @@ namespace RNS { namespace Persistence {
 		}
 
 		stream.write('{');
-		for (const auto& [key, value] : map) {
+		for (const auto& kvp : map) {
+			const auto& key = kvp.first;
+			const auto& value = kvp.second;
 			stream.write('"');
 			std::string hex = key.toHex();
 			stream.write(hex.c_str());

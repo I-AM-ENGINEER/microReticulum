@@ -214,7 +214,9 @@ void Reticulum::loop() {
 		}
 
 		// Perform interface processing
-		for (auto& [hash, interface] : Transport::get_interfaces()) {
+		for (auto& kvp : Transport::get_interfaces()) {
+			const auto& hash = kvp.first;
+			auto& interface = kvp.second;
 			interface.loop();
 		}
 
@@ -439,7 +441,9 @@ bool Reticulum::drop_path(const Bytes& destination) {
 uint16_t Reticulum::drop_all_via(const Bytes& transport_hash) {
 	uint16_t dropped_count = 0;
 	//for (auto& destination_hash : Transport::get_destination_table()) {
-	for (const auto& [destination_hash, destination_entry] : Transport::get_destination_table()) {
+	for (const auto& kvp : Transport::get_destination_table()) {
+		const auto& destination_hash = kvp.first;
+		const auto& destination_entry = kvp.second;
 		if (destination_entry._received_from == transport_hash) {
 			Transport::expire_path(destination_hash);
 			++dropped_count;
